@@ -116,8 +116,29 @@ function OrderPage({ onNavigate }) {
   const handleOrder = () => {
     if (cartItems.length === 0) return;
     
-    // 주문 완료 처리 (현재는 알림만 표시)
-    alert(`주문이 완료되었습니다!\n총 금액: ${cartItems.reduce((sum, item) => sum + item.totalPrice, 0).toLocaleString()}원`);
+    const totalPrice = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
+    
+    // 주문 정보를 관리자 화면으로 전달
+    const orderItems = cartItems.map(item => ({
+      menuId: item.menuId,
+      menuName: item.menuName,
+      options: item.selectedOptions,
+      quantity: item.quantity,
+      price: item.totalPrice / item.quantity // 개당 가격
+    }));
+
+    // 커스텀 이벤트로 주문 정보 전달
+    const newOrderEvent = new CustomEvent('newOrder', {
+      detail: {
+        type: 'newOrder',
+        items: orderItems,
+        totalPrice: totalPrice
+      }
+    });
+    window.dispatchEvent(newOrderEvent);
+    
+    // 주문 완료 알림
+    alert(`주문이 완료되었습니다!\n총 금액: ${totalPrice.toLocaleString()}원`);
     setCartItems([]);
   };
 
