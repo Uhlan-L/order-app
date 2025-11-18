@@ -1,12 +1,19 @@
 .order-page {
   min-height: 100vh;
   background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
 }
 
 .order-content {
   max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
   padding: 2rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .section-title {

@@ -10,37 +10,43 @@ const menuData = [
     id: 1,
     name: '아메리카노(ICE)',
     price: 4000,
-    description: '간단한 설명...'
+    description: '간단한 설명...',
+    imageUrl: '/images/coffee-ice.jpg' // 아이스커피 이미지
   },
   {
     id: 2,
     name: '아메리카노(HOT)',
     price: 4000,
-    description: '간단한 설명...'
+    description: '간단한 설명...',
+    imageUrl: '/images/coffee-hot.jpg' // 주황색 머그잔 이미지
   },
   {
     id: 3,
     name: '카페라떼',
     price: 5000,
-    description: '간단한 설명...'
+    description: '간단한 설명...',
+    imageUrl: '/images/coffee-latte.jpg' // 라떼 이미지
   },
   {
     id: 4,
     name: '카푸치노',
     price: 5000,
-    description: '간단한 설명...'
+    description: '간단한 설명...',
+    imageUrl: '/images/coffee-cappuccino.jpg' // 카푸치노 이미지
   },
   {
     id: 5,
     name: '바닐라라떼',
     price: 5500,
-    description: '간단한 설명...'
+    description: '간단한 설명...',
+    imageUrl: '/images/coffee-latte.jpg' // 라떼 이미지 재사용
   },
   {
     id: 6,
     name: '카라멜마키아토',
     price: 5500,
-    description: '간단한 설명...'
+    description: '간단한 설명...',
+    imageUrl: '/images/coffee-latte.jpg' // 라떼 이미지 재사용
   }
 ];
 
