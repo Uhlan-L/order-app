@@ -21,12 +21,16 @@ function Cart({ cartItems, onOrder }) {
             {cartItems.length === 0 ? (
               <p className="empty-cart">장바구니가 비어있습니다.</p>
             ) : (
-              cartItems.map((item, index) => (
-                <div key={index} className="cart-item">
-                  <span className="item-name">{formatItemName(item)}</span>
-                  <span className="item-price">{item.totalPrice.toLocaleString()}원</span>
-                </div>
-              ))
+              cartItems.map((item) => {
+                // 고유한 key 생성: menuId + 옵션 ID 조합
+                const uniqueKey = `${item.menuId}-${item.selectedOptions.map(opt => opt.optionId).sort().join('-')}-${item.quantity}`;
+                return (
+                  <div key={uniqueKey} className="cart-item">
+                    <span className="item-name">{formatItemName(item)}</span>
+                    <span className="item-price">{item.totalPrice.toLocaleString()}원</span>
+                  </div>
+                );
+              })
             )}
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Header from '../components/Header';
 import Dashboard from '../components/Dashboard';
 import Inventory from '../components/Inventory';
@@ -46,6 +46,11 @@ function AdminPage({ onNavigate }) {
   };
 
   const stats = calculateStats();
+
+  // 주문 목록 최신순 정렬 (성능 최적화)
+  const sortedOrders = useMemo(() => {
+    return [...orders].sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate));
+  }, [orders]);
 
   // 재고 업데이트
   const handleUpdateStock = (menuId, newStock) => {
@@ -99,7 +104,7 @@ function AdminPage({ onNavigate }) {
           onUpdateStock={handleUpdateStock}
         />
         <OrderList 
-          orders={[...orders].sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate))} 
+          orders={sortedOrders} 
           onUpdateOrderStatus={handleUpdateOrderStatus}
         />
       </div>

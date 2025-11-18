@@ -4,6 +4,7 @@ import './MenuCard.css';
 
 function MenuCard({ menu, options, onAddToCart }) {
   const [selectedOptions, setSelectedOptions] = useState([]);
+  const [imageError, setImageError] = useState(false);
 
   const handleOptionChange = (optionId) => {
     setSelectedOptions(prev => {
@@ -21,18 +22,19 @@ function MenuCard({ menu, options, onAddToCart }) {
     setSelectedOptions([]); // 옵션 초기화
   };
 
-  const calculatePrice = () => {
-    const optionsPrice = options
-      .filter(opt => selectedOptions.includes(opt.id))
-      .reduce((sum, opt) => sum + opt.price, 0);
-    return menu.price + optionsPrice;
+  const handleImageError = () => {
+    setImageError(true);
   };
 
   return (
     <div className="menu-card">
       <div className="menu-image">
-        {menu.imageUrl ? (
-          <img src={menu.imageUrl} alt={menu.name} />
+        {menu.imageUrl && !imageError ? (
+          <img 
+            src={menu.imageUrl} 
+            alt={menu.name}
+            onError={handleImageError}
+          />
         ) : (
           <CoffeeImage menuName={menu.name} />
         )}
@@ -48,6 +50,7 @@ function MenuCard({ menu, options, onAddToCart }) {
                 type="checkbox"
                 checked={selectedOptions.includes(option.id)}
                 onChange={() => handleOptionChange(option.id)}
+                aria-label={`${option.name} 옵션 ${option.price > 0 ? `(+${option.price.toLocaleString()}원)` : '(무료)'}`}
               />
               <span>
                 {option.name} {option.price > 0 ? `(+${option.price.toLocaleString()}원)` : '(+0원)'}
@@ -55,7 +58,11 @@ function MenuCard({ menu, options, onAddToCart }) {
             </label>
           ))}
         </div>
-        <button className="add-to-cart-btn" onClick={handleAddToCart}>
+        <button 
+          className="add-to-cart-btn" 
+          onClick={handleAddToCart}
+          aria-label={`${menu.name} 장바구니에 추가`}
+        >
           담기
         </button>
       </div>
