@@ -7,8 +7,11 @@ import menusRouter from './routes/menus.js';
 import ordersRouter from './routes/orders.js';
 import adminRouter from './routes/admin.js';
 
-// 환경 변수 로드
-dotenv.config();
+// 환경 변수 로드 (로컬 개발 환경에서만 .env 파일 사용)
+// Render에서는 환경 변수를 직접 설정하므로 .env 파일이 없어도 됨
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config();
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;

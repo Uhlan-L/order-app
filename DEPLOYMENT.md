@@ -2,6 +2,8 @@
 
 이 문서는 커피 주문 앱을 Render.com에 배포하는 방법을 설명합니다.
 
+**📖 더 자세한 단계별 가이드는 `RENDER_DEPLOY_GUIDE.md` 파일을 참고하세요.**
+
 ## 배포 순서
 
 1. **PostgreSQL 데이터베이스 생성**
@@ -140,12 +142,45 @@ VITE_API_URL=https://coffee-order-api.onrender.com/api
 
 ---
 
-## 4. 배포 후 확인 사항
+## 4. 데이터베이스 스키마 생성
 
-### 4.1 데이터베이스 초기화
+### 4.1 방법 1: 서버 자동 생성 (권장)
 
-1. 백엔드 서버가 실행되면 자동으로 스키마가 생성됩니다.
-2. 초기 데이터(메뉴, 옵션)도 자동으로 삽입됩니다.
+백엔드 서버가 실행되면 자동으로 스키마가 생성됩니다.
+
+### 4.2 방법 2: 수동 스크립트 실행
+
+로컬에서 Render 데이터베이스에 직접 연결하여 스키마를 생성할 수 있습니다:
+
+1. `.env` 파일에 Render 데이터베이스 정보 설정:
+   ```env
+   DATABASE_URL=postgresql://user:password@host:port/database
+   # 또는
+   DB_HOST=your-render-db-host
+   DB_PORT=5432
+   DB_NAME=coffee_order_db
+   DB_USER=your-render-db-user
+   DB_PASSWORD=your-render-db-password
+   NODE_ENV=production
+   ```
+
+2. 스키마 생성:
+   ```bash
+   cd server
+   npm run init-render
+   ```
+
+3. 초기 데이터도 함께 삽입하려면:
+   ```bash
+   npm run init-render -- --seed
+   ```
+
+## 5. 배포 후 확인 사항
+
+### 5.1 데이터베이스 초기화 확인
+
+1. 백엔드 서버 로그에서 스키마 생성 메시지 확인
+2. 또는 수동으로 스키마 생성 스크립트 실행
 
 ### 4.2 CORS 설정 확인
 

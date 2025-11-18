@@ -9,7 +9,8 @@
     "dev": "nodemon server.js",
     "create-db": "node database/create-db.js",
     "check-db": "node database/check-connection.js",
-    "debug-env": "node database/debug-env.js"
+    "debug-env": "node database/debug-env.js",
+    "init-render": "node database/init-render.js"
   },
   "keywords": ["express", "api", "coffee", "order"],
   "author": "",
