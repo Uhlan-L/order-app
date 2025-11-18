@@ -55,6 +55,19 @@ function OrderList({ orders, onUpdateOrderStatus }) {
     }
   };
 
+  // 통계 계산
+  const totalAmount = orders.reduce((sum, order) => sum + order.totalPrice, 0);
+  const totalOrderCount = orders.length;
+  const completedOrderCount = orders.filter(order => order.status === '제조 완료').length;
+  
+  // 완료된 주문의 재고 건수 계산 (완료된 주문의 모든 아이템 수량 합계)
+  const completedStockCount = orders
+    .filter(order => order.status === '제조 완료')
+    .reduce((sum, order) => {
+      const itemCount = order.items.reduce((itemSum, item) => itemSum + item.quantity, 0);
+      return sum + itemCount;
+    }, 0);
+
   return (
     <div className="order-list">
       <h2 className="order-list-title">주문 현황</h2>
@@ -67,15 +80,31 @@ function OrderList({ orders, onUpdateOrderStatus }) {
               <div className="order-info">
                 <div className="order-date">{formatDate(order.orderDate)}</div>
                 <div className="order-items">{formatOrderItems(order.items)}</div>
-                <div className="order-price">{order.totalPrice.toLocaleString()}원</div>
               </div>
               <div className="order-action">
+                <span className="order-price">{order.totalPrice.toLocaleString()}원</span>
                 {getStatusButton(order)}
               </div>
             </div>
           ))
         )}
       </div>
+      {orders.length > 0 && (
+        <div className="order-summary">
+          <div className="summary-item">
+            <span className="summary-label">총 주문 금액:</span>
+            <span className="summary-value">{totalAmount.toLocaleString()}원</span>
+          </div>
+          <div className="summary-item">
+            <span className="summary-label">주문 건수:</span>
+            <span className="summary-value">{totalOrderCount}건 (완료: {completedOrderCount}건)</span>
+          </div>
+          <div className="summary-item">
+            <span className="summary-label">완료된 재고 건수:</span>
+            <span className="summary-value">{completedStockCount}건</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -10,47 +10,94 @@
   font-size: 1.5rem;
   font-weight: bold;
   color: #333;
-  margin: 0 0 1rem 0;
+  margin: 0 0 1.5rem 0;
+  text-align: center;
 }
 
 .dashboard-stats {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
-  flex-wrap: wrap;
+  align-items: center;
 }
 
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+.stat-card {
+  background-color: #ffffff;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card.highlight-card {
+  background-color: #ffffff;
+  border: 3px solid #2563eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+  position: relative;
+}
+
+.stat-card.highlight-card::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  z-index: -1;
+  opacity: 0.1;
 }
 
 .stat-label {
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: #666;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.stat-card.highlight-card .stat-label {
+  color: #2563eb;
+  font-weight: 600;
+  font-size: 1.1rem;
 }
 
 .stat-value {
-  font-size: 1.5rem;
+  font-size: 2.5rem;
   font-weight: bold;
-  color: #2563eb;
+  color: #333;
 }
 
-.stat-divider {
-  font-size: 1.2rem;
-  color: #999;
-  font-weight: bold;
+.stat-card.highlight-card .stat-value {
+  color: #2563eb;
+  font-size: 3rem;
+  text-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
 }
 
 @media (max-width: 768px) {
   .dashboard-stats {
-    flex-direction: column;
-    align-items: flex-start;
+    grid-template-columns: repeat(2, 1fr);
   }
-  
-  .stat-divider {
-    display: none;
+
+  .stat-value {
+    font-size: 2rem;
+  }
+
+  .stat-card.highlight-card .stat-value {
+    font-size: 2.5rem;
   }
 }
 
+@media (max-width: 480px) {
+  .dashboard-stats {
+    grid-template-columns: 1fr;
+  }
+}

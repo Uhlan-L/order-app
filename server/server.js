@@ -14,7 +14,10 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // 미들웨어 설정
-app.use(cors()); // CORS 설정 (프론트엔드와 통신을 위해)
+app.use(cors({
+  origin: 'http://localhost:3000', // 프론트엔드 주소
+  credentials: true
+})); // CORS 설정 (프론트엔드와 통신을 위해)
 app.use(express.json()); // JSON 요청 본문 파싱
 app.use(express.urlencoded({ extended: true })); // URL 인코딩된 요청 본문 파싱
 

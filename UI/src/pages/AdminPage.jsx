@@ -3,49 +3,78 @@ import Header from '../components/Header';
 import Dashboard from '../components/Dashboard';
 import Inventory from '../components/Inventory';
 import OrderList from '../components/OrderList';
+import { 
+  getDashboardStats, 
+  getInventory, 
+  updateInventory, 
+  getAdminOrders, 
+  updateOrderStatus 
+} from '../utils/api';
 import './AdminPage.css';
 
-// 초기 재고 데이터 (메뉴 3개)
-const initialInventory = [
-  { menuId: 1, menuName: '아메리카노 (ICE)', stock: 10 },
-  { menuId: 2, menuName: '아메리카노 (HOT)', stock: 8 },
-  { menuId: 3, menuName: '카페라떼', stock: 5 }
-];
-
-// 초기 주문 데이터 (예시)
-const initialOrders = [
-  {
-    id: 1,
-    orderDate: new Date().toISOString(),
-    status: '주문 접수',
-    items: [
-      {
-        menuId: 1,
-        menuName: '아메리카노(ICE)',
-        options: [{ optionId: 1, optionName: '샷 추가' }],
-        quantity: 1,
-        price: 4500
-      }
-    ],
-    totalPrice: 4500
-  }
-];
-
 function AdminPage({ onNavigate }) {
-  const [inventory, setInventory] = useState(initialInventory);
-  const [orders, setOrders] = useState(initialOrders);
+  const [inventory, setInventory] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    receivedOrders: 0,
+    inProductionOrders: 0,
+    completedOrders: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // 대시보드 통계 계산
-  const calculateStats = () => {
-    return {
-      totalOrders: orders.length,
-      receivedOrders: orders.filter(o => o.status === '주문 접수').length,
-      inProductionOrders: orders.filter(o => o.status === '제조 중').length,
-      completedOrders: orders.filter(o => o.status === '제조 완료').length
+  // 데이터 로드
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        
+        // 병렬로 데이터 로드
+        const [statsData, inventoryData, ordersData] = await Promise.all([
+          getDashboardStats(),
+          getInventory(),
+          getAdminOrders()
+        ]);
+        
+        setStats(statsData);
+        setInventory(inventoryData);
+        setOrders(ordersData);
+        setError(null);
+      } catch (err) {
+        console.error('데이터 로드 실패:', err);
+        setError('데이터를 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
     };
-  };
 
-  const stats = calculateStats();
+    loadData();
+    
+    // 주기적으로 데이터 새로고침 (5초마다)
+    const interval = setInterval(loadData, 5000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  // 주문하기 화면에서 주문이 들어오면 새로고침
+  useEffect(() => {
+    const handleNewOrder = async () => {
+      try {
+        const [statsData, ordersData] = await Promise.all([
+          getDashboardStats(),
+          getAdminOrders()
+        ]);
+        setStats(statsData);
+        setOrders(ordersData);
+      } catch (err) {
+        console.error('주문 데이터 새로고침 실패:', err);
+      }
+    };
+
+    window.addEventListener('newOrder', handleNewOrder);
+    return () => window.removeEventListener('newOrder', handleNewOrder);
+  }, []);
 
   // 주문 목록 최신순 정렬 (성능 최적화)
   const sortedOrders = useMemo(() => {
@@ -53,46 +82,67 @@ function AdminPage({ onNavigate }) {
   }, [orders]);
 
   // 재고 업데이트
-  const handleUpdateStock = (menuId, newStock) => {
-    setInventory(prev => 
-      prev.map(item => 
-        item.menuId === menuId 
-          ? { ...item, stock: newStock }
-          : item
-      )
-    );
+  const handleUpdateStock = async (menuId, newStock) => {
+    try {
+      const updated = await updateInventory(menuId, newStock);
+      setInventory(prev => 
+        prev.map(item => 
+          item.menuId === menuId 
+            ? updated
+            : item
+        )
+      );
+    } catch (error) {
+      console.error('재고 업데이트 실패:', error);
+      alert(`재고 업데이트에 실패했습니다: ${error.message}`);
+    }
   };
 
   // 주문 상태 업데이트
-  const handleUpdateOrderStatus = (orderId, newStatus) => {
-    setOrders(prev =>
-      prev.map(order =>
-        order.id === orderId
-          ? { ...order, status: newStatus }
-          : order
-      )
-    );
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    try {
+      const updated = await updateOrderStatus(orderId, newStatus);
+      
+      // 주문 목록 업데이트
+      setOrders(prev =>
+        prev.map(order =>
+          order.id === orderId
+            ? updated
+            : order
+        )
+      );
+      
+      // 통계 새로고침
+      const statsData = await getDashboardStats();
+      setStats(statsData);
+    } catch (error) {
+      console.error('주문 상태 업데이트 실패:', error);
+      alert(`주문 상태 변경에 실패했습니다: ${error.message}`);
+    }
   };
 
-  // 주문하기 화면에서 주문이 들어오면 여기로 전달받는 함수 (추후 구현)
-  useEffect(() => {
-    // 주문하기 화면에서 주문이 생성되면 localStorage나 이벤트를 통해 받을 수 있음
-    const handleNewOrder = (event) => {
-      if (event.detail && event.detail.type === 'newOrder') {
-        const newOrder = {
-          id: Date.now(),
-          orderDate: new Date().toISOString(),
-          status: '주문 접수',
-          items: event.detail.items,
-          totalPrice: event.detail.totalPrice
-        };
-        setOrders(prev => [newOrder, ...prev]);
-      }
-    };
+  if (loading) {
+    return (
+      <div className="admin-page">
+        <Header currentPage="admin" onNavigate={onNavigate} />
+        <div className="admin-content">
+          <p>데이터를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
 
-    window.addEventListener('newOrder', handleNewOrder);
-    return () => window.removeEventListener('newOrder', handleNewOrder);
-  }, []);
+  if (error) {
+    return (
+      <div className="admin-page">
+        <Header currentPage="admin" onNavigate={onNavigate} />
+        <div className="admin-content">
+          <p style={{ color: 'red' }}>{error}</p>
+          <button onClick={() => window.location.reload()}>다시 시도</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-page">

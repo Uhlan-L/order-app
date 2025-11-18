@@ -1,73 +1,47 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import MenuCard from '../components/MenuCard';
 import Cart from '../components/Cart';
+import { getMenus, getMenuOptions, createOrder } from '../utils/api';
 import './OrderPage.css';
 
-// 임의의 커피 메뉴 데이터
-const menuData = [
-  {
-    id: 1,
-    name: '아메리카노(ICE)',
-    price: 4000,
-    description: '간단한 설명...',
-    imageUrl: '/images/coffee-ice.jpg' // 아이스커피 이미지
-  },
-  {
-    id: 2,
-    name: '아메리카노(HOT)',
-    price: 4000,
-    description: '간단한 설명...',
-    imageUrl: '/images/coffee-hot.jpg' // 주황색 머그잔 이미지
-  },
-  {
-    id: 3,
-    name: '카페라떼',
-    price: 5000,
-    description: '간단한 설명...',
-    imageUrl: '/images/coffee-latte.jpg' // 라떼 이미지
-  },
-  {
-    id: 4,
-    name: '카푸치노',
-    price: 5000,
-    description: '간단한 설명...',
-    imageUrl: '/images/coffee-cappuccino.jpg' // 카푸치노 이미지
-  },
-  {
-    id: 5,
-    name: '바닐라라떼',
-    price: 5500,
-    description: '간단한 설명...',
-    imageUrl: '/images/coffee-latte.jpg' // 라떼 이미지 재사용
-  },
-  {
-    id: 6,
-    name: '카라멜마키아토',
-    price: 5500,
-    description: '간단한 설명...',
-    imageUrl: '/images/coffee-latte.jpg' // 라떼 이미지 재사용
-  }
-];
-
-// 옵션 데이터
-const optionsData = [
-  { id: 1, menuId: 1, name: '샷 추가', price: 500 },
-  { id: 2, menuId: 1, name: '시럽 추가', price: 0 },
-  { id: 3, menuId: 2, name: '샷 추가', price: 500 },
-  { id: 4, menuId: 2, name: '시럽 추가', price: 0 },
-  { id: 5, menuId: 3, name: '샷 추가', price: 500 },
-  { id: 6, menuId: 3, name: '시럽 추가', price: 0 },
-  { id: 7, menuId: 4, name: '샷 추가', price: 500 },
-  { id: 8, menuId: 4, name: '시럽 추가', price: 0 },
-  { id: 9, menuId: 5, name: '샷 추가', price: 500 },
-  { id: 10, menuId: 5, name: '시럽 추가', price: 0 },
-  { id: 11, menuId: 6, name: '샷 추가', price: 500 },
-  { id: 12, menuId: 6, name: '시럽 추가', price: 0 }
-];
-
 function OrderPage({ onNavigate }) {
+  const [menuData, setMenuData] = useState([]);
+  const [optionsData, setOptionsData] = useState([]);
   const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // 메뉴 데이터 로드
+  useEffect(() => {
+    const loadMenus = async () => {
+      try {
+        setLoading(true);
+        const menus = await getMenus();
+        setMenuData(menus);
+        
+        // 각 메뉴의 옵션 로드
+        const allOptions = [];
+        for (const menu of menus) {
+          try {
+            const options = await getMenuOptions(menu.id);
+            allOptions.push(...options);
+          } catch (err) {
+            console.error(`메뉴 ${menu.id}의 옵션 로드 실패:`, err);
+          }
+        }
+        setOptionsData(allOptions);
+        setError(null);
+      } catch (err) {
+        console.error('메뉴 로드 실패:', err);
+        setError('메뉴를 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMenus();
+  }, []);
 
   const getOptionsForMenu = (menuId) => {
     return optionsData.filter(opt => opt.menuId === menuId);
@@ -113,34 +87,74 @@ function OrderPage({ onNavigate }) {
     }
   };
 
-  const handleOrder = () => {
+  const handleOrder = async () => {
     if (cartItems.length === 0) return;
     
-    const totalPrice = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
-    
-    // 주문 정보를 관리자 화면으로 전달
-    const orderItems = cartItems.map(item => ({
-      menuId: item.menuId,
-      menuName: item.menuName,
-      options: item.selectedOptions,
-      quantity: item.quantity,
-      price: item.totalPrice / item.quantity // 개당 가격
-    }));
+    try {
+      // API 형식에 맞게 주문 데이터 변환
+      const orderItems = cartItems.map(item => ({
+        menuId: item.menuId,
+        options: item.selectedOptions.map(opt => opt.optionId),
+        quantity: item.quantity
+      }));
 
-    // 커스텀 이벤트로 주문 정보 전달
-    const newOrderEvent = new CustomEvent('newOrder', {
-      detail: {
-        type: 'newOrder',
-        items: orderItems,
-        totalPrice: totalPrice
-      }
-    });
-    window.dispatchEvent(newOrderEvent);
-    
-    // 주문 완료 알림
-    alert(`주문이 완료되었습니다!\n총 금액: ${totalPrice.toLocaleString()}원`);
-    setCartItems([]);
+      // API로 주문 생성
+      const order = await createOrder({ items: orderItems });
+      
+      // 주문 정보를 관리자 화면으로 전달
+      const newOrderEvent = new CustomEvent('newOrder', {
+        detail: {
+          type: 'newOrder',
+          order: order
+        }
+      });
+      window.dispatchEvent(newOrderEvent);
+      
+      // 주문 완료 알림
+      alert(`주문이 완료되었습니다!\n총 금액: ${order.totalPrice.toLocaleString()}원`);
+      setCartItems([]);
+    } catch (error) {
+      console.error('주문 생성 실패:', error);
+      alert(`주문에 실패했습니다: ${error.message}`);
+    }
   };
+
+  // 장바구니에서 특정 아이템 제거
+  const handleRemoveItem = (index) => {
+    setCartItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // 장바구니 전체 비우기
+  const handleClearAll = () => {
+    if (cartItems.length === 0) return;
+    
+    if (window.confirm('장바구니를 모두 비우시겠습니까?')) {
+      setCartItems([]);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="order-page">
+        <Header currentPage="order" onNavigate={onNavigate} />
+        <div className="order-content">
+          <p>메뉴를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="order-page">
+        <Header currentPage="order" onNavigate={onNavigate} />
+        <div className="order-content">
+          <p style={{ color: 'red' }}>{error}</p>
+          <button onClick={() => window.location.reload()}>다시 시도</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="order-page">
@@ -159,7 +173,12 @@ function OrderPage({ onNavigate }) {
             ))}
           </div>
         </div>
-        <Cart cartItems={cartItems} onOrder={handleOrder} />
+        <Cart 
+          cartItems={cartItems} 
+          onOrder={handleOrder}
+          onRemoveItem={handleRemoveItem}
+          onClearAll={handleClearAll}
+        />
       </div>
     </div>
   );
