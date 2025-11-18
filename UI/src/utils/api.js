@@ -1,6 +1,7 @@
 // API 호출 유틸리티 함수
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+//const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = 'https://order-app-backend-1fxk.onrender.com/api';
 
 // GET 요청
 export const get = async (endpoint) => {
