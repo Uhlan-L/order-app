@@ -14,8 +14,20 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // 미들웨어 설정
+const allowedOrigins = [
+  'http://localhost:3000',
+  process.env.FRONTEND_URL // 환경 변수로 프론트엔드 URL 설정
+].filter(Boolean); // undefined 제거
+
 app.use(cors({
-  origin: 'http://localhost:3000', // 프론트엔드 주소
+  origin: (origin, callback) => {
+    // 개발 환경에서는 모든 origin 허용, 프로덕션에서는 지정된 origin만 허용
+    if (process.env.NODE_ENV === 'development' || !origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 })); // CORS 설정 (프론트엔드와 통신을 위해)
 app.use(express.json()); // JSON 요청 본문 파싱
@@ -70,7 +82,10 @@ const startServer = async () => {
     await initDatabase();
     
     // 초기 데이터 삽입 (처음 한 번만 실행)
-    await seedDatabase();
+    // 주의: 프로덕션에서는 이미 데이터가 있을 수 있으므로 주석 처리하거나 조건부로 실행
+    if (process.env.NODE_ENV !== 'production' || process.env.SEED_DATA === 'true') {
+      await seedDatabase();
+    }
 
     // 서버 시작
     app.listen(PORT, () => {

@@ -1,0 +1,29 @@
+# Render.com 배포 설정 파일 (선택사항)
+# 이 파일을 사용하면 Render 대시보드에서 수동 설정 대신 자동으로 배포할 수 있습니다.
+
+services:
+  - type: web
+    name: coffee-order-api
+    env: node
+    region: oregon # 또는 가장 가까운 지역
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: coffee-order-db
+          property: connectionString
+      - key: FRONTEND_URL
+        sync: false # 프론트엔드 배포 후 수동으로 설정
+
+databases:
+  - name: coffee-order-db
+    databaseName: coffee_order_db
+    user: coffee_order_user
+    plan: free
+
