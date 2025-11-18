@@ -86,6 +86,7 @@
 - **Runtime**: `Node`
 - **Build Command**: `npm install`
 - **Start Command**: `npm start`
+- **Health Check Path**: `/health` (선택사항, 자동 감지됨)
 
 #### 플랜
 - **Free**: 테스트용 (15분 비활성 시 sleep)

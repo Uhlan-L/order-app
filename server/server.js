@@ -36,12 +36,22 @@ app.use(cors({
 app.use(express.json()); // JSON 요청 본문 파싱
 app.use(express.urlencoded({ extended: true })); // URL 인코딩된 요청 본문 파싱
 
+// Health check 엔드포인트 (Render health check용)
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 // 기본 라우트
 app.get('/', (req, res) => {
   res.json({
     message: '커피 주문 앱 API 서버',
     version: '1.0.0',
-    status: 'running'
+    status: 'running',
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -91,9 +101,12 @@ const startServer = async () => {
     }
 
     // 서버 시작
-    app.listen(PORT, () => {
-      console.log(`서버가 포트 ${PORT}에서 실행 중입니다.`);
-      console.log(`http://localhost:${PORT}`);
+    // Render에서는 0.0.0.0에 바인딩해야 외부에서 접근 가능
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`✅ 서버가 포트 ${PORT}에서 실행 중입니다.`);
+      console.log(`🌐 http://0.0.0.0:${PORT}`);
+      console.log(`📊 Health check: http://0.0.0.0:${PORT}/health`);
+      console.log(`🔧 환경: ${process.env.NODE_ENV || 'development'}`);
     });
   } catch (error) {
     console.error('서버 시작 실패:', error);
